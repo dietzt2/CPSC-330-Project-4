@@ -1,0 +1,77 @@
+resource readers_writers ()
+
+  var M:int
+  var N:int
+  getarg(1,M)
+  getarg(2, N)
+
+  var nr:int :=0
+  var nw:int :=0
+
+  sem e := 1
+  sem r :=0
+  sem w := 0
+
+  var dr:int := 0
+  var dw:int :=0
+
+  process reader (i:=1 to M)
+
+    do (true) ->
+     nap (int(random(10,20)))
+     P(e)
+     if (nw > 0) ->
+       dr++
+       V(e)
+       P(r)
+     fi
+     v(e)
+
+     #read the database
+     write(i, " is reading the db")
+     nap(int(random(200, 1000)))
+
+     P(e)
+     nr--
+     if (dw > 0) ->
+       dw--
+       V(w)
+     [] else ->
+       if (dr > 0) ->
+         dr--
+         V(r)
+       [] else ->
+         V(e)
+       fi
+     fi
+   od
+
+
+  process writer (j := 1 to N)
+    do (true) ->
+      nap(int(random(50,100)))
+      P(e)
+      if (nw > 0) ->
+        dw++
+        V(e)
+        P(w)
+      fi
+      nw++
+      V(e)
+      #write the database
+      write (j, " is writing the db")
+      nap(int(random(500,2000)))
+
+      P(e)
+      nw--
+      if (nw = 0 and dr > 0) ->
+        dr--
+        V(r)
+      [] else ->
+        V(e)
+      fi
+    od
+  end writer
+end readers_writers
+
+
